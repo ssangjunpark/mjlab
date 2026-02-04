@@ -75,8 +75,20 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
     motion_cmd = cfg.env.commands["motion"]
     assert isinstance(motion_cmd, MotionCommandCfg)
 
+    # Check if multiple motion files are specified.
+    if motion_cmd.motion_files and len(motion_cmd.motion_files) > 0:
+      # Verify all local motion files exist.
+      missing_files = [f for f in motion_cmd.motion_files if not Path(f).exists()]
+      if missing_files:
+        raise ValueError(
+          f"Motion files not found: {missing_files}\n"
+          "Ensure all paths in --env.commands.motion.motion-files exist."
+        )
+      print(f"[INFO] Using {len(motion_cmd.motion_files)} local motion files (multi-trajectory mode)")
+      for i, f in enumerate(motion_cmd.motion_files):
+        print(f"  [{i}] {f}")
     # Check if motion_file is already set (e.g., via CLI --env.commands.motion.motion-file).
-    if motion_cmd.motion_file and Path(motion_cmd.motion_file).exists():
+    elif motion_cmd.motion_file and Path(motion_cmd.motion_file).exists():
       print(f"[INFO] Using local motion file: {motion_cmd.motion_file}")
     elif cfg.registry_name:
       # Download from WandB registry.
@@ -87,12 +99,26 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
 
       api = wandb.Api()
       artifact = api.artifact(registry_name)
-      motion_cmd.motion_file = str(Path(artifact.download()) / "motion.npz")
+      artifact_dir = Path(artifact.download())
+
+      # Check if artifact contains multiple motion files.
+      motion_files_in_artifact = list(artifact_dir.glob("*.npz"))
+      if len(motion_files_in_artifact) > 1:
+        # Multiple motion files found - use multi-trajectory mode.
+        motion_cmd.motion_files = sorted([str(f) for f in motion_files_in_artifact])
+        print(f"[INFO] Downloaded {len(motion_cmd.motion_files)} motion files from WandB (multi-trajectory mode)")
+        for i, f in enumerate(motion_cmd.motion_files):
+          print(f"  [{i}] {Path(f).name}")
+      else:
+        # Single motion file (backward compatible).
+        motion_cmd.motion_file = str(artifact_dir / "motion.npz")
+        print(f"[INFO] Downloaded motion file from WandB: {motion_cmd.motion_file}")
     else:
       raise ValueError(
         "For tracking tasks, provide either:\n"
         "  --registry-name your-org/motions/motion-name (download from WandB)\n"
-        "  --env.commands.motion.motion-file /path/to/motion.npz (local file)"
+        "  --env.commands.motion.motion-file /path/to/motion.npz (local file)\n"
+        "  --env.commands.motion.motion-files '[/path/to/motion1.npz, /path/to/motion2.npz]' (multiple files)"
       )
 
   # Enable NaN guard if requested.
