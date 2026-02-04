@@ -60,7 +60,7 @@ class MultiMotionLoader:
   """Loader for multiple motion trajectories with per-trajectory indexing."""
 
   def __init__(
-    self, motion_files: list[str], body_indexes: torch.Tensor, device: str = "cpu"
+    self, motion_files: tuple[str, ...] | list[str], body_indexes: torch.Tensor, device: str = "cpu"
   ) -> None:
     self.device = device
     self.num_motions = len(motion_files)
@@ -170,11 +170,10 @@ class MotionCommand(CommandTerm):
     )
 
     # Support both single motion file and multiple motion files
-    self._use_multi_motion = cfg.motion_files is not None and len(cfg.motion_files) > 0
+    self._use_multi_motion = len(cfg.motion_files) > 0
     self.multi_motion: MultiMotionLoader | None = None
     self.motion_ids: torch.Tensor | None = None
     if self._use_multi_motion:
-      assert cfg.motion_files is not None  # Type narrowing
       self.multi_motion = MultiMotionLoader(
         cfg.motion_files, self.body_indexes, device=self.device
       )
@@ -824,7 +823,7 @@ class MotionCommand(CommandTerm):
 @dataclass(kw_only=True)
 class MotionCommandCfg(CommandTermCfg):
   motion_file: str = ""  # Single motion file (for backward compatibility)
-  motion_files: list[str] | None = None  # Multiple motion files for multi-trajectory mode
+  motion_files: tuple[str, ...] = ()  # Multiple motion files for multi-trajectory mode
   anchor_body_name: str
   body_names: tuple[str, ...]
   entity_name: str

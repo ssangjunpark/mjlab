@@ -76,7 +76,7 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
     assert isinstance(motion_cmd, MotionCommandCfg)
 
     # Check if multiple motion files are specified.
-    if motion_cmd.motion_files and len(motion_cmd.motion_files) > 0:
+    if len(motion_cmd.motion_files) > 0:
       # Verify all local motion files exist.
       missing_files = [f for f in motion_cmd.motion_files if not Path(f).exists()]
       if missing_files:
