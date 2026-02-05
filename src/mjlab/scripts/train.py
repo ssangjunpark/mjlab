@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal, cast
 
 import tyro
+import yaml
 
 from mjlab.envs import ManagerBasedRlEnv, ManagerBasedRlEnvCfg
 from mjlab.rl import MjlabOnPolicyRunner, RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper
@@ -74,6 +75,17 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
   if is_tracking_task:
     motion_cmd = cfg.env.commands["motion"]
     assert isinstance(motion_cmd, MotionCommandCfg)
+
+    # Check if motion_file points to a YAML file with a list of motions.
+    if motion_cmd.motion_file and motion_cmd.motion_file.endswith(".yaml"):
+      try:
+        with open(motion_cmd.motion_file, "r") as f:
+          data = yaml.safe_load(f)
+          if "data" in data and isinstance(data["data"], list):
+            motion_cmd.motion_files = tuple(data["data"])
+            print(f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}")
+      except Exception as e:
+        print(f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}")
 
     # Check if multiple motion files are specified.
     if len(motion_cmd.motion_files) > 0:
@@ -170,6 +182,8 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
   env = RslRlVecEnvWrapper(env, clip_actions=cfg.agent.clip_actions)
 
   agent_cfg = asdict(cfg.agent)
+  # Force tensorboard logger
+  agent_cfg["logger"] = "tensorboard"
   env_cfg = asdict(cfg.env)
 
   runner_cls = load_runner_cls(task_id)
@@ -182,7 +196,8 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
 
   runner = runner_cls(env, agent_cfg, str(log_dir), device, **runner_kwargs)
 
-  add_wandb_tags(cfg.agent.wandb_tags)
+  if agent_cfg["logger"] == "wandb":
+    add_wandb_tags(cfg.agent.wandb_tags)
   runner.add_git_repo_to_log(__file__)
   if resume_path is not None:
     print(f"[INFO]: Loading model checkpoint from: {resume_path}")

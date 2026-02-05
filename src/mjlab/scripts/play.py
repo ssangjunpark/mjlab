@@ -8,6 +8,7 @@ from typing import Literal
 
 import torch
 import tyro
+import yaml
 from rsl_rl.runners import OnPolicyRunner
 
 from mjlab.envs import ManagerBasedRlEnv
@@ -114,6 +115,17 @@ def run_play(task_id: str, cfg: PlayConfig):
           if art is None:
             raise RuntimeError("No motion artifact found in the run.")
           motion_cmd.motion_file = str(Path(art.download()) / "motion.npz")
+
+    # Check if motion_file points to a YAML file with a list of motions.
+    if motion_cmd.motion_file and str(motion_cmd.motion_file).endswith(".yaml"):
+      try:
+        with open(motion_cmd.motion_file, "r") as f:
+          data = yaml.safe_load(f)
+          if "data" in data and isinstance(data["data"], list):
+            motion_cmd.motion_files = tuple(data["data"])
+            print(f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}")
+      except Exception as e:
+        print(f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}")
 
   log_dir: Path | None = None
   resume_path: Path | None = None

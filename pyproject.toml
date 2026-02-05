@@ -60,6 +60,9 @@ demo = "mjlab.scripts.demo:main"
 list_envs = "mjlab.scripts.list_envs:main"
 viz-nan = "mjlab.scripts.nan_viz:main"
 convert = "mjlab.scripts.npy_to_npz:main"
+gen_filepath = "mjlab.scripts.generate_data_list:read"
+
+
 [dependency-groups]
 dev = [
   "ipdb>=0.13.13",
