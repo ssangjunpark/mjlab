@@ -14,8 +14,8 @@ def unitree_g1_tracking_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
       init_noise_std=1.0,
       actor_obs_normalization=True,
       critic_obs_normalization=True,
-      actor_hidden_dims=(512, 256, 128),
-      critic_hidden_dims=(512, 256, 128),
+      actor_hidden_dims=(1024, 512, 256),
+      critic_hidden_dims=(1024, 512, 256),
       activation="elu",
     ),
     algorithm=RslRlPpoAlgorithmCfg(
@@ -34,6 +34,6 @@ def unitree_g1_tracking_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
     ),
     experiment_name="g1_tracking",
     save_interval=500,
-    num_steps_per_env=24,
+    num_steps_per_env=48,
     max_iterations=30_000,
   )
