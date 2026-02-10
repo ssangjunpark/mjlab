@@ -171,6 +171,10 @@ class MotionCommand(CommandTerm):
 
     # Support both single motion file and multiple motion files
     self._use_multi_motion = len(cfg.motion_files) > 0
+
+    if self._use_multi_motion:
+      print("[INFO] using multiple motion, activating multiple action sampling mode")
+    
     self.multi_motion: MultiMotionLoader | None = None
     self.motion_ids: torch.Tensor | None = None
     if self._use_multi_motion:
