@@ -16,7 +16,7 @@ def unitree_g1_tracking_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
       critic_obs_normalization=True,
       actor_hidden_dims=(1024, 1024, 1024, 1024, 1024, 1024),
       critic_hidden_dims=(1024, 1024, 1024, 1024),
-      activation="elu",
+      activation="relu",
     ),
     algorithm=RslRlPpoAlgorithmCfg(
       value_loss_coef=1.0,
@@ -25,7 +25,7 @@ def unitree_g1_tracking_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
       entropy_coef=0.005,
       num_learning_epochs=5,
       num_mini_batches=4,
-      learning_rate=1.0e-3,
+      learning_rate=2e-5,
       schedule="adaptive",
       gamma=0.99,
       lam=0.95,
