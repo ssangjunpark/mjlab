@@ -261,14 +261,14 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
     "time_out": TerminationTermCfg(func=mdp.time_out, time_out=True),
     "anchor_pos": TerminationTermCfg(
       func=mdp.bad_anchor_pos_z_only,
-      params={"command_name": "motion", "threshold": 0.4},
+      params={"command_name": "motion", "threshold": 0.25},
     ),
     "anchor_ori": TerminationTermCfg(
       func=mdp.bad_anchor_ori,
       params={
         "asset_cfg": SceneEntityCfg("robot"),
         "command_name": "motion",
-        "threshold": 1.2,
+        "threshold": 0.8,
       },
     ),
     # "ee_body_pos": TerminationTermCfg(
