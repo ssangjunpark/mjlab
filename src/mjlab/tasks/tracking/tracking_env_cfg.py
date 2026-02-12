@@ -57,6 +57,26 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
       params={"command_name": "motion"},
       noise=Unoise(n_min=-0.05, n_max=0.05),
     ),
+    "motion_anchor_pos_b_lookahead": ObservationTermCfg(
+      func=mdp.motion_anchor_pos_b_lookahead,
+      params={"command_name": "motion", "num_future_frames": 3, "frame_interval": 5},
+      noise=Unoise(n_min=-0.1, n_max=0.1),
+    ),
+    "motion_anchor_ori_b_lookahead": ObservationTermCfg(
+      func=mdp.motion_anchor_ori_b_lookahead,
+      params={"command_name": "motion", "num_future_frames": 3, "frame_interval": 5},
+      noise=Unoise(n_min=-0.02, n_max=0.02),
+    ),
+    "body_pos": ObservationTermCfg(
+      func=mdp.robot_body_pos_b,
+      params={"command_name": "motion"},
+      noise=Unoise(n_min=-0.02, n_max=0.02),
+    ),
+    "body_ori": ObservationTermCfg(
+      func=mdp.robot_body_ori_b,
+      params={"command_name": "motion"},
+      noise=Unoise(n_min=-0.02, n_max=0.02),
+    ),
     "base_lin_vel": ObservationTermCfg(
       func=mdp.builtin_sensor,
       params={"sensor_name": "robot/imu_lin_vel"},
@@ -212,22 +232,22 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
   rewards: dict[str, RewardTermCfg] = {
     "motion_global_root_pos": RewardTermCfg(
       func=mdp.motion_global_anchor_position_error_exp,
-      weight=0.5,
+      weight=1.0,
       params={"command_name": "motion", "std": 0.3},
     ),
     "motion_global_root_ori": RewardTermCfg(
       func=mdp.motion_global_anchor_orientation_error_exp,
-      weight=0.5,
+      weight=1.0,
       params={"command_name": "motion", "std": 0.4},
     ),
     "motion_body_pos": RewardTermCfg(
       func=mdp.motion_relative_body_position_error_exp,
-      weight=1.0,
+      weight=2.0,
       params={"command_name": "motion", "std": 0.3},
     ),
     "motion_body_ori": RewardTermCfg(
       func=mdp.motion_relative_body_orientation_error_exp,
-      weight=1.0,
+      weight=2.0,
       params={"command_name": "motion", "std": 0.4},
     ),
     "motion_body_lin_vel": RewardTermCfg(
@@ -252,8 +272,8 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
       params={"sensor_name": "self_collision"},
     ),
     "alive": RewardTermCfg(
-    func=mdp.is_alive,
-    weight=1.0,
+      func=mdp.is_alive,
+      weight=1.0,
     ),
   }
 
@@ -275,14 +295,10 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
         "threshold": 1.2,
       },
     ),
-    # "ee_body_pos": TerminationTermCfg(
-      # func=mdp.bad_motion_body_pos_z_only,
-      # params={
-        # "command_name": "motion",
-        # "threshold": 0.25,
-        # "body_names": (),  # Set per-robot.
-      # },
-    # ),
+    "body_pos_mean": TerminationTermCfg(
+      func=mdp.bad_motion_body_pos_mean,
+      params={"command_name": "motion", "threshold": 0.5},
+    ),
   }
 
   ##

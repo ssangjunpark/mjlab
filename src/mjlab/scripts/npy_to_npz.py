@@ -4,12 +4,12 @@ This script takes a motion .npy files (with keys: q, fps, mocap, skeleton, joint
 from a folder and converts them to the .npz format required by the tracking task training.
 """
 
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import torch
 import tyro
-from pathlib import Path
 from tqdm import tqdm
 
 from mjlab.entity import Entity
@@ -38,7 +38,7 @@ class MotionLoader:
     self.output_dt = 1.0 / self.output_fps
     self.current_idx = 0
     self.device = device
-    
+
     # Parse q array: [base_pos(3), base_quat(4), joint_angles(29)]
     motion = torch.from_numpy(q).to(torch.float32).to(self.device)
     self.motion_base_poss_input = motion[:, :3]
@@ -46,10 +46,10 @@ class MotionLoader:
     # Convert quat from xyzw to wxyz
     self.motion_base_rots_input = self.motion_base_rots_input[:, [3, 0, 1, 2]]
     self.motion_dof_poss_input = motion[:, 7:]
-    
+
     self.input_frames = motion.shape[0]
     self.duration = (self.input_frames - 1) * self.input_dt
-    
+
     self._interpolate_motion()
     self._compute_velocities()
 
@@ -226,8 +226,12 @@ def run_sim(
     log["joint_vel"].append(robot.data.joint_vel[0, :].cpu().numpy().copy())
     log["body_pos_w"].append(robot.data.body_link_pos_w[0, :].cpu().numpy().copy())
     log["body_quat_w"].append(robot.data.body_link_quat_w[0, :].cpu().numpy().copy())
-    log["body_lin_vel_w"].append(robot.data.body_link_lin_vel_w[0, :].cpu().numpy().copy())
-    log["body_ang_vel_w"].append(robot.data.body_link_ang_vel_w[0, :].cpu().numpy().copy())
+    log["body_lin_vel_w"].append(
+      robot.data.body_link_lin_vel_w[0, :].cpu().numpy().copy()
+    )
+    log["body_ang_vel_w"].append(
+      robot.data.body_link_ang_vel_w[0, :].cpu().numpy().copy()
+    )
 
     frame_count += 1
     pbar.update(1)
@@ -254,13 +258,13 @@ def run_sim(
 
 
 def main(
-  input_folder = "/home/sangjunpark/Desktop/unitree_g1",
-  output_folder = "/home/sangjunpark/Desktop/unitree_g1_mjlab",
+  input_folder="/home/sangjunpark/Desktop/unitree_g1",
+  output_folder="/home/sangjunpark/Desktop/unitree_g1_mjlab",
   output_fps: float = 50.0,
   device: str = "cuda:0",
 ):
   """Convert .npy motion files in a folder to .npz format.
-  
+
   Args:
     input_folder: Path to the input folder containing .npy files.
     output_folder: Path to the output folder. If None, creates 'converted_npz' inside input_folder.
@@ -282,10 +286,10 @@ def main(
   if not files:
     print(f"No .npy files found in {input_folder}")
     return
-  
+
   print(f"Found {len(files)} files to process.")
   output_folder.mkdir(parents=True, exist_ok=True)
-  
+
   # Create simulation (following csv_to_npz.py pattern)
   sim_cfg = SimulationCfg()
   sim_cfg.mujoco.timestep = 1.0 / output_fps
@@ -333,13 +337,13 @@ def main(
     # Load the .npy file
     print(f"Loading motion from {input_file}")
     data = np.load(input_file, allow_pickle=True).item()
-    
-    q = data['q']  # (num_frames, 36) - joint configurations
-    input_fps = data['fps']
-    
+
+    q = data["q"]  # (num_frames, 36) - joint configurations
+    input_fps = data["fps"]
+
     print(f"Input motion: {q.shape[0]} frames @ {input_fps} fps")
     print(f"Joint names in file: {data.get('joint_names', 'N/A')}")
-    
+
     if q.shape[1] != 36:
       print(f"Skipping {input_file}: Unexpected q shape: {q.shape}. Expected (N, 36)")
       continue
@@ -351,7 +355,7 @@ def main(
       output_fps=output_fps,
       device=device,
     )
-    
+
     output_path = output_folder / f"{input_file.stem}.npz"
     run_sim(
       sim=sim,

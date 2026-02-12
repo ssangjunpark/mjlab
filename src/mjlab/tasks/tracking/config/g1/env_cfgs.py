@@ -62,10 +62,10 @@ def unitree_g1_flat_tracking_env_cfg(
 
   # breakpoint()
   # cfg.terminations["ee_body_pos"].params["body_names"] = (
-    # "left_ankle_roll_link",
-    # "right_ankle_roll_link",
-    # "left_wrist_yaw_link",
-    # "right_wrist_yaw_link",
+  # "left_ankle_roll_link",
+  # "right_ankle_roll_link",
+  # "left_wrist_yaw_link",
+  # "right_wrist_yaw_link",
   # )
 
   cfg.viewer.body_name = "torso_link"

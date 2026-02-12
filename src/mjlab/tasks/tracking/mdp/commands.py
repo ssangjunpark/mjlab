@@ -60,7 +60,10 @@ class MultiMotionLoader:
   """Loader for multiple motion trajectories with per-trajectory indexing."""
 
   def __init__(
-    self, motion_files: tuple[str, ...] | list[str], body_indexes: torch.Tensor, device: str = "cpu"
+    self,
+    motion_files: tuple[str, ...] | list[str],
+    body_indexes: torch.Tensor,
+    device: str = "cpu",
   ) -> None:
     self.device = device
     self.num_motions = len(motion_files)
@@ -77,7 +80,9 @@ class MultiMotionLoader:
     )
     self.max_trajectory_length = max(self.trajectory_lengths)
 
-  def get_joint_pos(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_joint_pos(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get joint positions for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     joint_dim = self.motions[0].joint_pos.shape[1]
@@ -89,7 +94,9 @@ class MultiMotionLoader:
         result[mask] = self.motions[i].joint_pos[clamped_time]
     return result
 
-  def get_joint_vel(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_joint_vel(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get joint velocities for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     joint_dim = self.motions[0].joint_vel.shape[1]
@@ -101,7 +108,9 @@ class MultiMotionLoader:
         result[mask] = self.motions[i].joint_vel[clamped_time]
     return result
 
-  def get_body_pos_w(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_body_pos_w(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get body positions for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     num_bodies = self.motions[0].body_pos_w.shape[1]
@@ -113,7 +122,9 @@ class MultiMotionLoader:
         result[mask] = self.motions[i].body_pos_w[clamped_time]
     return result
 
-  def get_body_quat_w(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_body_quat_w(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get body quaternions for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     num_bodies = self.motions[0].body_quat_w.shape[1]
@@ -126,7 +137,9 @@ class MultiMotionLoader:
         result[mask] = self.motions[i].body_quat_w[clamped_time]
     return result
 
-  def get_body_lin_vel_w(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_body_lin_vel_w(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get body linear velocities for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     num_bodies = self.motions[0].body_lin_vel_w.shape[1]
@@ -138,7 +151,9 @@ class MultiMotionLoader:
         result[mask] = self.motions[i].body_lin_vel_w[clamped_time]
     return result
 
-  def get_body_ang_vel_w(self, motion_ids: torch.Tensor, time_steps: torch.Tensor) -> torch.Tensor:
+  def get_body_ang_vel_w(
+    self, motion_ids: torch.Tensor, time_steps: torch.Tensor
+  ) -> torch.Tensor:
     """Get body angular velocities for given motion IDs and time steps."""
     batch_size = motion_ids.shape[0]
     num_bodies = self.motions[0].body_ang_vel_w.shape[1]
@@ -174,7 +189,7 @@ class MotionCommand(CommandTerm):
 
     if self._use_multi_motion:
       print("[INFO] using multiple motion, activating multiple action sampling mode")
-    
+
     self.multi_motion: MultiMotionLoader | None = None
     self.motion_ids: torch.Tensor | None = None
     if self._use_multi_motion:
@@ -210,10 +225,16 @@ class MotionCommand(CommandTerm):
       self.bin_count = self.max_bin_count  # For compatibility
       # Per-trajectory failure counts: (num_motions, max_bin_count)
       self.bin_failed_count_per_traj = torch.zeros(
-        self.multi_motion.num_motions, self.max_bin_count, dtype=torch.float, device=self.device
+        self.multi_motion.num_motions,
+        self.max_bin_count,
+        dtype=torch.float,
+        device=self.device,
       )
       self._current_bin_failed_per_traj = torch.zeros(
-        self.multi_motion.num_motions, self.max_bin_count, dtype=torch.float, device=self.device
+        self.multi_motion.num_motions,
+        self.max_bin_count,
+        dtype=torch.float,
+        device=self.device,
       )
       # Trajectory-level failure counts for sampling which trajectory
       self.traj_failed_count = torch.zeros(
@@ -254,7 +275,9 @@ class MotionCommand(CommandTerm):
     self.metrics["sampling_top1_prob"] = torch.zeros(self.num_envs, device=self.device)
     self.metrics["sampling_top1_bin"] = torch.zeros(self.num_envs, device=self.device)
     # Multi-motion specific metrics
-    self.metrics["sampling_traj_entropy"] = torch.zeros(self.num_envs, device=self.device)
+    self.metrics["sampling_traj_entropy"] = torch.zeros(
+      self.num_envs, device=self.device
+    )
     self.metrics["sampling_traj_id"] = torch.zeros(self.num_envs, device=self.device)
 
     # Ghost model created lazily on first visualization
@@ -335,7 +358,9 @@ class MotionCommand(CommandTerm):
   def anchor_lin_vel_w(self) -> torch.Tensor:
     if self._use_multi_motion:
       assert self.multi_motion is not None and self.motion_ids is not None
-      body_lin_vel = self.multi_motion.get_body_lin_vel_w(self.motion_ids, self.time_steps)
+      body_lin_vel = self.multi_motion.get_body_lin_vel_w(
+        self.motion_ids, self.time_steps
+      )
       return body_lin_vel[:, self.motion_anchor_body_index]
     return self.motion.body_lin_vel_w[self.time_steps, self.motion_anchor_body_index]
 
@@ -343,7 +368,9 @@ class MotionCommand(CommandTerm):
   def anchor_ang_vel_w(self) -> torch.Tensor:
     if self._use_multi_motion:
       assert self.multi_motion is not None and self.motion_ids is not None
-      body_ang_vel = self.multi_motion.get_body_ang_vel_w(self.motion_ids, self.time_steps)
+      body_ang_vel = self.multi_motion.get_body_ang_vel_w(
+        self.motion_ids, self.time_steps
+      )
       return body_ang_vel[:, self.motion_anchor_body_index]
     return self.motion.body_ang_vel_w[self.time_steps, self.motion_anchor_body_index]
 
@@ -537,7 +564,9 @@ class MotionCommand(CommandTerm):
 
     # Step 1: Sample which trajectory to use for each env
     # Compute trajectory sampling probabilities based on failures
-    traj_probs = self.traj_failed_count + self.cfg.adaptive_uniform_ratio / float(num_motions)
+    traj_probs = self.traj_failed_count + self.cfg.adaptive_uniform_ratio / float(
+      num_motions
+    )
     traj_probs = traj_probs / traj_probs.sum()
 
     sampled_traj_ids = torch.multinomial(traj_probs, len(env_ids), replacement=True)
@@ -582,9 +611,14 @@ class MotionCommand(CommandTerm):
       sampling_probs = sampling_probs / sampling_probs.sum()
 
       # Sample bins and convert to time steps
-      sampled_bins = torch.multinomial(sampling_probs, len(traj_env_ids), replacement=True)
+      sampled_bins = torch.multinomial(
+        sampling_probs, len(traj_env_ids), replacement=True
+      )
       self.time_steps[traj_env_ids] = (
-        (sampled_bins + sample_uniform(0.0, 1.0, (len(traj_env_ids),), device=self.device))
+        (
+          sampled_bins
+          + sample_uniform(0.0, 1.0, (len(traj_env_ids),), device=self.device)
+        )
         / bin_count
         * (traj_length - 1)
       ).long()
@@ -606,7 +640,6 @@ class MotionCommand(CommandTerm):
     self.metrics["sampling_entropy"][:] = H_norm
     self.metrics["sampling_top1_prob"][:] = pmax
     self.metrics["sampling_top1_bin"][:] = imax.float() / total_bins
-
 
   def _resample_command(self, env_ids: torch.Tensor):
     if self.cfg.sampling_mode == "start":

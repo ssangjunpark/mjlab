@@ -123,9 +123,13 @@ def run_play(task_id: str, cfg: PlayConfig):
           data = yaml.safe_load(f)
           if "data" in data and isinstance(data["data"], list):
             motion_cmd.motion_files = tuple(data["data"])
-            print(f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}")
+            print(
+              f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}"
+            )
       except Exception as e:
-        print(f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}")
+        print(
+          f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}"
+        )
 
   log_dir: Path | None = None
   resume_path: Path | None = None

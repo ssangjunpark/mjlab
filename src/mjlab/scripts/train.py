@@ -83,9 +83,13 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
           data = yaml.safe_load(f)
           if "data" in data and isinstance(data["data"], list):
             motion_cmd.motion_files = tuple(data["data"])
-            print(f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}")
+            print(
+              f"[INFO] Loaded {len(motion_cmd.motion_files)} motion files from YAML: {motion_cmd.motion_file}"
+            )
       except Exception as e:
-        print(f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}")
+        print(
+          f"[WARNING] Failed to load motion files from YAML {motion_cmd.motion_file}: {e}"
+        )
 
     # Check if multiple motion files are specified.
     if len(motion_cmd.motion_files) > 0:
@@ -96,7 +100,9 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
           f"Motion files not found: {missing_files}\n"
           "Ensure all paths in --env.commands.motion.motion-files exist."
         )
-      print(f"[INFO] Using {len(motion_cmd.motion_files)} local motion files (multi-trajectory mode)")
+      print(
+        f"[INFO] Using {len(motion_cmd.motion_files)} local motion files (multi-trajectory mode)"
+      )
       for i, f in enumerate(motion_cmd.motion_files):
         print(f"  [{i}] {f}")
     # Check if motion_file is already set (e.g., via CLI --env.commands.motion.motion-file).
@@ -118,7 +124,9 @@ def run_train(task_id: str, cfg: TrainConfig, log_dir: Path) -> None:
       if len(motion_files_in_artifact) > 1:
         # Multiple motion files found - use multi-trajectory mode.
         motion_cmd.motion_files = sorted([str(f) for f in motion_files_in_artifact])
-        print(f"[INFO] Downloaded {len(motion_cmd.motion_files)} motion files from WandB (multi-trajectory mode)")
+        print(
+          f"[INFO] Downloaded {len(motion_cmd.motion_files)} motion files from WandB (multi-trajectory mode)"
+        )
         for i, f in enumerate(motion_cmd.motion_files):
           print(f"  [{i}] {Path(f).name}")
       else:
